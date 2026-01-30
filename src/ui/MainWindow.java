@@ -1,6 +1,7 @@
 package ui;
 
 import javax.swing.*;
+import controller.LaberintoController;
 import java.awt.*;
 
 public class MainWindow extends JFrame {
@@ -18,13 +19,37 @@ public class MainWindow extends JFrame {
         leftPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         leftPanel.setPreferredSize(new Dimension(220, 0));
 
-        leftPanel.add(new JButton("Generar"));
+        // 🔹 Botón Colocar
+        JButton btnColocar = new JButton("Colocar");
+        btnColocar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leftPanel.add(btnColocar);
+        leftPanel.add(Box.createVerticalStrut(8));
+
+        // 🔹 Botón Conectar Nodos
+        JButton btnConectar = new JButton("Conectar nodos");
+        btnConectar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        leftPanel.add(btnConectar);
+        leftPanel.add(Box.createVerticalStrut(15));
+
+        // 🔹 Algoritmos
+        leftPanel.add(new JLabel("Algoritmo:"));
         leftPanel.add(Box.createVerticalStrut(5));
 
-        leftPanel.add(new JLabel("Algoritmo:"));
-        leftPanel.add(new JComboBox<>(new String[]{"BFS", "DFS"}));
-        leftPanel.add(Box.createVerticalStrut(10));
+        JButton btnBFS = new JButton("BFS");
+        JButton btnDFS = new JButton("DFS");
 
+        Dimension smallSize = new Dimension(70, 25);
+        btnBFS.setPreferredSize(smallSize);
+        btnDFS.setPreferredSize(smallSize);
+        btnBFS.setMaximumSize(smallSize);
+        btnDFS.setMaximumSize(smallSize);
+
+        leftPanel.add(btnBFS);
+        leftPanel.add(Box.createVerticalStrut(5));
+        leftPanel.add(btnDFS);
+        leftPanel.add(Box.createVerticalStrut(15));
+
+        // 🔹 Otros botones
         leftPanel.add(new JButton("Resolver"));
         leftPanel.add(Box.createVerticalStrut(5));
         leftPanel.add(new JButton("Paso a Paso"));
@@ -35,6 +60,7 @@ public class MainWindow extends JFrame {
 
         leftPanel.add(Box.createVerticalStrut(20));
 
+        // 🔹 Modo Edición
         leftPanel.add(new JLabel("Modo Edición:"));
         leftPanel.add(Box.createVerticalStrut(5));
         leftPanel.add(new JButton("Inicio"));
@@ -47,19 +73,14 @@ public class MainWindow extends JFrame {
 
         add(leftPanel, BorderLayout.WEST);
 
-        // ===== PANEL CENTRAL (IMAGEN) =====
-        JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        // ===== PANEL CENTRAL (MAPA INTERACTIVO) =====
+        LaberintoController controller = new LaberintoController();
+        MapPanel mapPanel = new MapPanel(controller);
+        add(mapPanel, BorderLayout.CENTER);
 
-        JLabel imageLabel = new JLabel();
-        imageLabel.setHorizontalAlignment(JLabel.CENTER);
-        imageLabel.setVerticalAlignment(JLabel.CENTER);
-        imageLabel.setIcon(new ImageIcon(
-                getClass().getResource("/assets/Mapa.png")
-        ));
-
-        centerPanel.add(imageLabel, BorderLayout.CENTER);
-        add(centerPanel, BorderLayout.CENTER);
+        // 🔥 CONECTAR BOTONES CON LOS MODOS
+        btnColocar.addActionListener(e -> controller.activarModoColocar());
+        btnConectar.addActionListener(e -> controller.activarModoConectar());
 
         // ===== PANEL INFERIOR =====
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -69,9 +90,6 @@ public class MainWindow extends JFrame {
         add(bottomPanel, BorderLayout.SOUTH);
 
         setVisible(true);
-
-
-        
     }
 
     private void mostrarInformacion() {
