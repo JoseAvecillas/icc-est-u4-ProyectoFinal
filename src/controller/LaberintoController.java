@@ -11,7 +11,7 @@ public class LaberintoController {
     private List<Nodo> nodos;
     private int contadorNodos = 1;
 
-    // 🔹 Modos de interacción
+    //  Modos de interacción
     private boolean modoColocar = false;
     private boolean modoConectar = false;
     private boolean modoInicio = false;
@@ -258,7 +258,6 @@ public class LaberintoController {
 
         if (actual.equals(fin)) return true;
 
-        // 👇 USAR LAS CONEXIONES DEL GRAFO
         for (Nodo vecino : grafo.getVecinos(actual)) {
             if (!visitados.contains(vecino)) {
                 if (dfsRecursivoPaso(vecino, fin, visitados, orden))
@@ -268,7 +267,7 @@ public class LaberintoController {
         return false;
     }
 
-    public List<Nodo> ejecutarPasoAPaso(boolean usarBFS) {
+    public ResultadoPaso ejecutarPasoAPaso(boolean usarBFS) {
         Nodo inicio = null;
         Nodo fin = null;
 
@@ -277,13 +276,62 @@ public class LaberintoController {
             if (n.getTipo() == TipoNodo.FIN) fin = n;
         }
 
-        if (inicio == null || fin == null) return new ArrayList<>();
+        if (inicio == null || fin == null)
+            return new ResultadoPaso(new ArrayList<>(), new ArrayList<>());
 
         limpiarEstadosBusqueda();
 
+        ResultadoBusqueda resultado;
+
         if (usarBFS)
-            return bfsPasoAPaso(inicio, fin);
+            resultado = buscarConBFS(inicio, fin);
         else
-            return dfsPasoAPaso(inicio, fin);
+            resultado = buscarConDFS(inicio, fin);
+
+        return new ResultadoPaso(resultado.getVisitados(), resultado.getCamino());
+    }
+
+    public List<Nodo> obtenerOrdenBFS(Nodo inicio) {
+        List<Nodo> orden = new ArrayList<>();
+        Set<Nodo> visitados = new HashSet<>();
+        Queue<Nodo> cola = new LinkedList<>();
+
+        cola.add(inicio);
+        visitados.add(inicio);
+
+        while (!cola.isEmpty()) {
+            Nodo actual = cola.poll();
+            orden.add(actual);
+
+            for (Nodo vecino : grafo.getVecinos(actual)) {
+                if (!visitados.contains(vecino)) {
+                    visitados.add(vecino);
+                    cola.add(vecino);
+                }
+            }
+        }
+        return orden;
+    }
+
+    public List<Nodo> obtenerOrdenDFS(Nodo inicio) {
+        List<Nodo> orden = new ArrayList<>();
+        Set<Nodo> visitados = new HashSet<>();
+        Stack<Nodo> pila = new Stack<>();
+
+        pila.push(inicio);
+
+        while (!pila.isEmpty()) {
+            Nodo actual = pila.pop();
+
+            if (!visitados.contains(actual)) {
+                visitados.add(actual);
+                orden.add(actual);
+
+                for (Nodo vecino : grafo.getVecinos(actual)) {
+                    pila.push(vecino);
+                }
+            }
+        }
+        return orden;
     }
 }

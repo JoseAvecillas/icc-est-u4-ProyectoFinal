@@ -121,29 +121,32 @@ public class MapPanel extends JPanel {
         }
     }
 
-    public void animarBusqueda(List<Nodo> recorrido) {
-        if (recorrido.isEmpty()) return;
+    public void animarBusqueda(List<Nodo> visitados, List<Nodo> caminoFinal) {
+        Timer timer = new Timer(400, null); 
 
-        Timer timer = new Timer(500, null); // medio segundo por paso
-
-        final int[] i = {0};
-
+        final int[] index = {0};
         timer.addActionListener(e -> {
-            if (i[0] > 0) {
-                Nodo anterior = recorrido.get(i[0] - 1);
-                if (anterior.getTipo() == TipoNodo.NORMAL)
-                    anterior.setTipo(TipoNodo.VISITADO);
-            }
 
-            if (i[0] < recorrido.size()) {
-                Nodo actual = recorrido.get(i[0]);
-                if (actual.getTipo() == TipoNodo.NORMAL)
-                    actual.setTipo(TipoNodo.VISITADO);
+            // 🟣 FASE 1 — Animar nodos visitados
+            if (index[0] < visitados.size()) {
 
+                Nodo n = visitados.get(index[0]);
+
+                if (n.getTipo() == TipoNodo.NORMAL) {
+                    n.setTipo(TipoNodo.VISITADO);
+                }
                 repaint();
-                i[0]++;
-            } else {
+                index[0]++;
+            }
+            // Pintar el camino final completo
+            else {
                 timer.stop();
+                for (Nodo n : caminoFinal) {
+                    if (n.getTipo() != TipoNodo.INICIO && n.getTipo() != TipoNodo.FIN) {
+                        n.setTipo(TipoNodo.CAMINO);
+                    }
+                }
+                repaint();
             }
         });
 

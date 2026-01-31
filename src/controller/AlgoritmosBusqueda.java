@@ -9,7 +9,7 @@ public class AlgoritmosBusqueda {
     // ===================== BFS =====================
     public static ResultadoBusqueda bfs(Grafo grafo, Nodo inicio, Nodo fin) {
 
-        // 🔒 Validaciones
+        //  Validaciones
         if (inicio == null || fin == null) {
             return new ResultadoBusqueda(new ArrayList<>(), new ArrayList<>());
         }
@@ -40,7 +40,6 @@ public class AlgoritmosBusqueda {
             }
         }
 
-        // ❌ No encontró camino
         return new ResultadoBusqueda(ordenVisita, new ArrayList<>());
     }
 

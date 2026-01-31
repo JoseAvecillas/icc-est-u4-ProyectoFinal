@@ -23,9 +23,7 @@ public class Grafo {
         return adyacencia.keySet();
     }
 
-    // ==============================
-    // 🔥 ESTE ES EL QUE FALTABA
-    // ==============================
+    
     public Map<Nodo, List<Nodo>> getListaAdyacencia() {
         return adyacencia;
     }

@@ -1,18 +1,92 @@
-## Getting Started
+# Resolución de Laberintos con BFS y DFS
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+![Logo Universidad](src/assets/logoupscolor.svg)
 
-## Folder Structure
+---
 
-The workspace contains two folders by default, where:
+## Información General
+- **Universidad:** Universidad Politecnica Salesiana 
+- **Carrera:** Computacion / Ingeniera en Sistemas
+- **Materia:** Estructura de Datos
+- **Estudiante:** Jose Avecillas
+- **Docente:** Ingeniero Pablo Torres
+- **Periodo:** Periodo 67
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+---
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+## Descripción del Proyecto
+- Crear un algoritmo con interfaz grafica que implemente metodos DFS y BFS en una interfaz grafica en una imagen de un mapa.
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
 
-## Dependency Management
+## Justificación Técnica
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+- El proyecto fue desarrollado para aplicar los conceptos de grafos,
+nodos y algoritmos de búsqueda vistos en la asignatura de Estructura
+de Datos, integrándolos en una aplicación gráfica interactiva. El uso de BFS y DFS permite analizar distintos enfoques de recorrido
+en grafos, mientras que la visualización paso a paso facilita la
+comprensión del comportamiento interno de cada algoritmo. 
+---
+
+## Objetivos
+- Crear una interfaz grafica
+- Implementar Nodos y Grafos
+- Implementar DFS Y BFS
+
+
+### Objetivo General
+
+- Que la ejecucion de BFS Y DFS en nodos del mapa se ejecuten de una manera efectiva.
+---
+
+## Funcionalidades
+
+- Colocación manual de nodos sobre un mapa
+- Conexión de nodos para formar un grafo
+- Selección de nodo inicio y nodo fin
+- Resolución del laberinto con BFS y DFS
+- Visualización paso a paso del recorrido
+
+---
+
+## Tecnologías Utilizadas
+
+- Java
+- Java Swing
+- NetBeans
+- Git / GitHub
+
+---
+
+## Estructura del Proyecto
+
+```txt
+src/
+ ├─ ui/
+ │   ├─ MainWindow.java
+ │   └─ MapPanel.java
+ ├─ controller/
+ │   ├─ LaberintoController.java
+ │   └─ AlgoritmosBusqueda.java
+ ├─ models/
+ │   ├─ Nodo.java
+ │   ├─ Grafo.java
+ │   └─ ResultadoBusqueda.java
+ └─ assets/
+     └─ Mapa.png
+     └─ logoupscolor.svg
+App.java
+```
+
+## Capturas de Pantalla de la Aplicación
+
+### Interfaz principal
+![Interfaz principal](src/assets/InterfazGrafica.png)
+
+### Colocación y conexión de nodos
+![Nodos conectados](src/assets/NodosConectados.png)
+
+### Ejecución de BFS
+![BFS](src/assets/BFS.png)
+
+### Ejecución de DFS
+![DFS](src/assets/DFS.png)

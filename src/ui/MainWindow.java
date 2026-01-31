@@ -3,6 +3,8 @@ package ui;
 import javax.swing.*;
 import controller.LaberintoController;
 import models.Nodo;
+import models.ResultadoPaso;
+
 import java.awt.*;
 import java.util.List;
 
@@ -43,7 +45,7 @@ public class MainWindow extends JFrame {
         leftPanel.add(btnConectar);
         leftPanel.add(Box.createVerticalStrut(15));
 
-        // 🔹 Algoritmos
+        //  Algoritmos
         leftPanel.add(new JLabel("Algoritmo:"));
         JButton btnBFS = new JButton("BFS");
         JButton btnDFS = new JButton("DFS");
@@ -56,12 +58,12 @@ public class MainWindow extends JFrame {
         leftPanel.add(btnPaso);
         leftPanel.add(Box.createVerticalStrut(15));
 
-        // 🔹 Limpiar
+        //  Limpiar
         JButton btnLimpiar = new JButton("Limpiar");
         leftPanel.add(btnLimpiar);
         leftPanel.add(Box.createVerticalStrut(20));
 
-        // 🔹 Modo Edición
+        //  Modo Edición
         leftPanel.add(new JLabel("Modo Edición:"));
         JButton btnInicio = new JButton("Inicio");
         JButton btnFin = new JButton("Fin");
@@ -102,8 +104,8 @@ public class MainWindow extends JFrame {
 
             if (!controller.hayInicioYFin()) return;
 
-            List<Nodo> recorrido = controller.ejecutarPasoAPaso(usarBFS[0]);
-            mapPanel.animarBusqueda(recorrido);
+            ResultadoPaso resultado = controller.ejecutarPasoAPaso(true); 
+            mapPanel.animarBusqueda(resultado.getVisitados(), resultado.getCamino());
         });
 
         // ===== PANEL INFERIOR =====
