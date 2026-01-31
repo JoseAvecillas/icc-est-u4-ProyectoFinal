@@ -7,6 +7,8 @@ public class Nodo {
     private int x;
     private int y;
     private String id; 
+    private TipoNodo tipo = TipoNodo.NORMAL;
+
 
     public Nodo(int x, int y, String id) {
         this.x = x;
@@ -42,5 +44,21 @@ public class Nodo {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public enum TipoNodo {
+        NORMAL,
+        INICIO,
+        FIN,
+        VISITADO,
+        CAMINO
+    }
+
+    public TipoNodo getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(TipoNodo tipo) {
+        this.tipo = tipo;
     }
 }

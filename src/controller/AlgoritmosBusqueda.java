@@ -9,6 +9,11 @@ public class AlgoritmosBusqueda {
     // ===================== BFS =====================
     public static ResultadoBusqueda bfs(Grafo grafo, Nodo inicio, Nodo fin) {
 
+        // 🔒 Validaciones
+        if (inicio == null || fin == null) {
+            return new ResultadoBusqueda(new ArrayList<>(), new ArrayList<>());
+        }
+
         Queue<Nodo> cola = new LinkedList<>();
         Set<Nodo> visitados = new HashSet<>();
         Map<Nodo, Nodo> padre = new HashMap<>();
@@ -35,11 +40,16 @@ public class AlgoritmosBusqueda {
             }
         }
 
+        // ❌ No encontró camino
         return new ResultadoBusqueda(ordenVisita, new ArrayList<>());
     }
 
     // ===================== DFS =====================
     public static ResultadoBusqueda dfs(Grafo grafo, Nodo inicio, Nodo fin) {
+
+        if (inicio == null || fin == null) {
+            return new ResultadoBusqueda(new ArrayList<>(), new ArrayList<>());
+        }
 
         Set<Nodo> visitados = new HashSet<>();
         Map<Nodo, Nodo> padre = new HashMap<>();
@@ -76,7 +86,7 @@ public class AlgoritmosBusqueda {
                 padre.put(vecino, actual);
 
                 if (dfsRecursivo(grafo, vecino, fin, visitados, padre, ordenVisita)) {
-                    return true; // se detiene cuando encuentra el fin
+                    return true;
                 }
             }
         }
