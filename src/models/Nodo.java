@@ -51,7 +51,8 @@ public class Nodo {
         INICIO,
         FIN,
         VISITADO,
-        CAMINO
+        CAMINO,
+        BLOQUEADO
     }
 
     public TipoNodo getTipo() {

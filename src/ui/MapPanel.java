@@ -1,9 +1,7 @@
 package ui;
-
 import models.Nodo;
 import models.Nodo.TipoNodo;
 import controller.LaberintoController;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -14,13 +12,15 @@ public class MapPanel extends JPanel {
 
     private Image mapa;
     private LaberintoController controller;
+    private static final int NODE_RADIUS = 12;
+    private static final int ARROW_GAP = 2;
 
-    private Nodo nodoSeleccionado = null; // para conectar
+    // Para conectar 
+    private Nodo nodoSeleccionado = null;
 
     public MapPanel(LaberintoController controller) {
         this.controller = controller;
         this.mapa = new ImageIcon(getClass().getResource("/assets/Mapa.png")).getImage();
-
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -30,20 +30,18 @@ public class MapPanel extends JPanel {
     }
 
     private void manejarClick(MouseEvent e) {
-
         int x = e.getX();
         int y = e.getY();
-
-        // 🟢 MODO COLOCAR NODOS (CLICK IZQUIERDO)
+        // MODO COLOCAR NODOS (CLICK IZQUIERDO)
         if (SwingUtilities.isLeftMouseButton(e) && controller.isModoColocar()) {
             controller.agregarNodo(x, y);
             repaint();
             return;
         }
 
-        // 🟡 MARCAR INICIO / FIN / BORRAR (CLICK IZQUIERDO)
+        // MARCAR INICIO / FIN / BLOQUEAR (CLICK IZQUIERDO)
         if (SwingUtilities.isLeftMouseButton(e) &&
-            (controller.isModoInicio() || controller.isModoFin() || controller.isModoBorrar())) {
+                (controller.isModoInicio() || controller.isModoFin() || controller.isModoBloquear())) {
 
             Nodo clickeado = controller.obtenerNodoCercano(x, y);
             controller.seleccionarNodo(clickeado);
@@ -51,40 +49,81 @@ public class MapPanel extends JPanel {
             return;
         }
 
-        // 🔵 MODO CONECTAR NODOS (CLICK DERECHO)
-        if (SwingUtilities.isRightMouseButton(e) && controller.isModoConectar()) {
-
+        // BORRAR (CLICK IZQUIERDO) -> ELIMINA el nodo
+        if (SwingUtilities.isLeftMouseButton(e) && controller.isModoBorrar()) {
             Nodo clickeado = controller.obtenerNodoCercano(x, y);
             if (clickeado == null) return;
 
-            if (nodoSeleccionado == null) {
-                nodoSeleccionado = clickeado; // primer nodo
-            } else {
-                controller.conectarNodos(nodoSeleccionado, clickeado); // segundo nodo
-                nodoSeleccionado = null; // reiniciar selección
+            if (nodoSeleccionado == clickeado) {
+                nodoSeleccionado = null;
             }
+            controller.eliminarNodo(clickeado);
+            repaint();
+            return;
+        }
 
+        // CONEXIONES (CLICK DERECHO)
+        if (SwingUtilities.isRightMouseButton(e) &&
+                (controller.isModoConectarBi() || controller.isModoConectarDir())) {
+            Nodo clickeado = controller.obtenerNodoCercano(x, y);
+            if (clickeado == null) return;
+            // Primer click derecho: selecciona origen
+            if (nodoSeleccionado == null) {
+                nodoSeleccionado = clickeado;
+                repaint();
+                return;
+            }
+            // Segundo click derecho: conecta según modo
+            if (controller.isModoConectarBi()) {
+                controller.conectarBidireccional(nodoSeleccionado, clickeado);
+            } else {
+                controller.conectarDireccional(nodoSeleccionado, clickeado);
+            }
+            nodoSeleccionado = null;
             repaint();
         }
     }
 
-    // 🎨 Devuelve el color según el tipo de nodo
+    // Devuelve el color según el tipo de nodo
     private Color getColorNodo(Nodo n) {
         switch (n.getTipo()) {
             case INICIO:
                 return Color.GREEN;
-
             case FIN:
                 return Color.RED;
-
             case VISITADO:
-                return new Color(150, 0, 200); // morado
-
+                return new Color(150, 0, 200);
             case CAMINO:
-                return new Color(255, 215, 0); // dorado
-
+                return new Color(255, 215, 0);
+            case BLOQUEADO:
+                return Color.BLACK; 
             default:
-                return Color.BLUE; // normal
+                return Color.BLUE;
+        }
+    }
+
+    // Dibuja una flecha desde (x1,y1) hacia (x2,y2) (termina en el borde del nodo)
+    private void drawArrow(Graphics2D g2, int x1, int y1, int x2, int y2) {
+        double phi = Math.toRadians(30);
+        int barb = 12;
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double dist = Math.hypot(dx, dy);
+        if (dist == 0) return;
+        double ux = dx / dist;
+        double uy = dy / dist;
+        int x2c = (int) Math.round(x2 - (NODE_RADIUS + ARROW_GAP) * ux);
+        int y2c = (int) Math.round(y2 - (NODE_RADIUS + ARROW_GAP) * uy);
+        int x1c = (int) Math.round(x1 + (NODE_RADIUS + ARROW_GAP) * ux);
+        int y1c = (int) Math.round(y1 + (NODE_RADIUS + ARROW_GAP) * uy);
+        g2.drawLine(x1c, y1c, x2c, y2c);
+
+        double theta = Math.atan2(y2c - y1c, x2c - x1c);
+        for (int j = 0; j < 2; j++) {
+            double rho = theta + (j == 0 ? phi : -phi);
+            int x = (int) Math.round(x2c - barb * Math.cos(rho));
+            int y = (int) Math.round(y2c - barb * Math.sin(rho));
+            g2.drawLine(x2c, y2c, x, y);
         }
     }
 
@@ -94,22 +133,37 @@ public class MapPanel extends JPanel {
 
         // Dibujar mapa
         g.drawImage(mapa, 0, 0, getWidth(), getHeight(), this);
-
         Graphics2D g2 = (Graphics2D) g;
 
-        // Dibujar conexiones
+        // Dibujar conexiones y una flecha si es direccional
         g2.setColor(Color.BLACK);
         g2.setStroke(new BasicStroke(3));
         Map<Nodo, List<Nodo>> conexiones = controller.getConexiones();
-        for (Nodo n : conexiones.keySet()) {
-            for (Nodo vecino : conexiones.get(n)) {
-                g2.drawLine(n.getX(), n.getY(), vecino.getX(), vecino.getY());
+        for (Nodo origen : conexiones.keySet()) {
+            for (Nodo destino : conexiones.get(origen)) {
+                int x1 = origen.getX();
+                int y1 = origen.getY();
+                int x2 = destino.getX();
+                int y2 = destino.getY();
+
+                boolean esBidireccional =
+                        conexiones.containsKey(destino) &&
+                        conexiones.get(destino).contains(origen);
+                if (esBidireccional) {
+                    g2.drawLine(x1, y1, x2, y2);
+                } else {
+                    drawArrow(g2, x1, y1, x2, y2);
+                }
             }
         }
 
-        // Dibujar nodos con color dinámico
+        // Dibujar nodos
         for (Nodo n : controller.getNodos()) {
 
+            if (nodoSeleccionado == n) {
+                g2.setColor(Color.ORANGE);
+                g2.fillOval(n.getX() - 15, n.getY() - 15, 30, 30);
+            }
             g2.setColor(getColorNodo(n));
             g2.fillOval(n.getX() - 12, n.getY() - 12, 24, 24);
 
@@ -122,12 +176,11 @@ public class MapPanel extends JPanel {
     }
 
     public void animarBusqueda(List<Nodo> visitados, List<Nodo> caminoFinal) {
-        Timer timer = new Timer(400, null); 
+        Timer timer = new Timer(400, null);
 
         final int[] index = {0};
         timer.addActionListener(e -> {
 
-            // 🟣 FASE 1 — Animar nodos visitados
             if (index[0] < visitados.size()) {
 
                 Nodo n = visitados.get(index[0]);
@@ -137,9 +190,7 @@ public class MapPanel extends JPanel {
                 }
                 repaint();
                 index[0]++;
-            }
-            // Pintar el camino final completo
-            else {
+            } else {
                 timer.stop();
                 for (Nodo n : caminoFinal) {
                     if (n.getTipo() != TipoNodo.INICIO && n.getTipo() != TipoNodo.FIN) {
@@ -149,7 +200,6 @@ public class MapPanel extends JPanel {
                 repaint();
             }
         });
-
         timer.start();
     }
 }
