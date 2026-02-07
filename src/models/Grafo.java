@@ -24,6 +24,15 @@ public class Grafo {
         adyacencia.get(origen).add(destino);
     }
 
+    public void eliminarConexion(Nodo origen, Nodo destino) {
+        if (origen == null || destino == null) return;
+
+        List<Nodo> vecinos = adyacencia.get(origen);
+        if (vecinos != null) {
+            vecinos.remove(destino);
+        }
+    }
+
     // Eliminar nodo y todas sus conexiones
     public void eliminarNodo(Nodo nodo) {
         if (nodo == null) return;

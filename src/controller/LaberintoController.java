@@ -3,7 +3,15 @@ package controller;
 import models.*;
 import models.Nodo.TipoNodo;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
+
+import controller.LaberintoController.RegistroBusqueda;
 
 public class LaberintoController {
 
@@ -23,12 +31,22 @@ public class LaberintoController {
     private boolean modoFin = false;
     private boolean modoBorrar = false;
     private boolean modoBloquear = false;
+    private boolean modoEliminarConexion = false;
 
     private ResultadoPaso pasoActual;
     private int indiceVisitados;
     private int indiceCamino;
     private boolean faseCamino;
     private Boolean pasoEsBFS;
+
+    private final List<RegistroBusqueda> historial = new ArrayList<>();
+
+
+    // Informacion
+    private String ultimaConexion = null;
+    private String ultimoMetodo = null;
+    private long ultimoTiempoNanos = -1;
+    private boolean ultimoEncontroCamino = false;
 
     public LaberintoController() {
         grafo = new Grafo();
@@ -71,6 +89,11 @@ public class LaberintoController {
         modoBloquear = true;
     }
 
+    public void activarModoEliminarConexion() {
+        desactivarModos();
+        modoEliminarConexion = true;
+    }
+
     private void desactivarModos() {
         modoColocar = false;
 
@@ -81,6 +104,7 @@ public class LaberintoController {
         modoFin = false;
         modoBorrar = false;
         modoBloquear = false;
+        modoEliminarConexion = false;
     }
 
     public boolean isModoColocar() { return modoColocar; }
@@ -90,6 +114,11 @@ public class LaberintoController {
     public boolean isModoFin() { return modoFin; }
     public boolean isModoBorrar() { return modoBorrar; }
     public boolean isModoBloquear() { return modoBloquear; }
+    public boolean isModoEliminarConexion() { return modoEliminarConexion; }
+    public String getUltimaConexion() { return ultimaConexion; }
+    public String getUltimoMetodo() { return ultimoMetodo; }
+    public long getUltimoTiempoNanos() { return ultimoTiempoNanos; }
+    public boolean getUltimoEncontroCamino() { return ultimoEncontroCamino; }
 
     // CREAR NODOS
     public Nodo agregarNodo(int x, int y) {
@@ -110,6 +139,15 @@ public class LaberintoController {
         if (origen != null && destino != null && !origen.equals(destino)) {
             grafo.conectarDirigido(origen, destino);
         }
+    }
+
+    public void eliminarConexion(Nodo a, Nodo b) {
+        if (a == null || b == null || a.equals(b)) return;
+
+        grafo.eliminarConexion(a, b);
+        grafo.eliminarConexion(b, a);
+
+        limpiarEstadosBusqueda();
     }
 
     // BORRAR NODO 
@@ -279,5 +317,149 @@ public class LaberintoController {
 
     public Boolean getPasoEsBFS() {
         return pasoEsBFS;
+    }
+
+    public void registrarUltimaBusqueda(Nodo inicio, Nodo fin, String metodo, long tiempoNanos, boolean encontroCamino) {
+        if (inicio == null || fin == null) return;
+        ultimaConexion = inicio.getId() + " -> " + fin.getId();
+        ultimoMetodo = metodo;
+        ultimoTiempoNanos = tiempoNanos;
+        ultimoEncontroCamino = encontroCamino;
+
+        historial.add(new RegistroBusqueda(
+                ultimaConexion,
+                ultimoMetodo,
+                getUltimoTiempoFormateado(),
+                ultimoEncontroCamino ? "Sí" : "No"
+        ));
+    }
+
+    public boolean hayUltimaBusqueda() {
+        return ultimaConexion != null && ultimoMetodo != null && ultimoTiempoNanos >= 0;
+    }
+
+    public String getResumenUltimaBusqueda() {
+        if (!hayUltimaBusqueda()) return "Aún no hay búsquedas registradas.";
+
+        String tiempoStr;
+        if (ultimoTiempoNanos < 1_000) tiempoStr = ultimoTiempoNanos + " ns";
+        else if (ultimoTiempoNanos < 1_000_000) tiempoStr = (ultimoTiempoNanos / 1_000.0) + " µs";
+        else if (ultimoTiempoNanos < 1_000_000_000) tiempoStr = (ultimoTiempoNanos / 1_000_000.0) + " ms";
+        else tiempoStr = (ultimoTiempoNanos / 1_000_000_000.0) + " s";
+
+        return "Conexion: " + ultimaConexion + "\n"
+            + "Metodo: " + ultimoMetodo + "\n"
+            + "Tiempo: " + tiempoStr + "\n"
+            + "Encontro camino: " + (ultimoEncontroCamino ? "Si" : "No");
+    }
+
+    public String getUltimoTiempoFormateado() {
+        if (ultimoTiempoNanos < 0) return "-";
+        if (ultimoTiempoNanos < 1_000) return ultimoTiempoNanos + " ns";
+        if (ultimoTiempoNanos < 1_000_000) return (ultimoTiempoNanos / 1_000.0) + " µs";
+        if (ultimoTiempoNanos < 1_000_000_000) return (ultimoTiempoNanos / 1_000_000.0) + " ms";
+        return (ultimoTiempoNanos / 1_000_000_000.0) + " s";
+    }
+
+    public static class RegistroBusqueda {
+        public final String conexion;
+        public final String metodo;
+        public final String tiempo;
+        public final String encontro;
+
+        public RegistroBusqueda(String conexion, String metodo, String tiempo, String encontro) {
+            this.conexion = conexion;
+            this.metodo = metodo;
+            this.tiempo = tiempo;
+            this.encontro = encontro;
+        }
+    }
+
+    public List<RegistroBusqueda> getHistorial() {
+        return new ArrayList<>(historial);
+    }
+
+    // Cargar y Guardar
+    public void guardarConfiguracion(File file) throws IOException {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
+
+            pw.println("NODES");
+            for (Nodo n : nodos) {
+                pw.println(n.getId() + ";" + n.getX() + ";" + n.getY() + ";" + n.getTipo().name());
+            }
+
+            pw.println("EDGES");
+            for (Map.Entry<Nodo, List<Nodo>> entry : grafo.getListaAdyacencia().entrySet()) {
+                Nodo origen = entry.getKey();
+                for (Nodo destino : entry.getValue()) {
+                    pw.println(origen.getId() + "->" + destino.getId());
+                }
+            }
+        }
+    }
+
+
+    public void cargarConfiguracion(File file) throws IOException {
+        reiniciar();
+        Map<String, Nodo> porId = new HashMap<>();
+        boolean leyendoNodos = false;
+        boolean leyendoEdges = false;
+        int maxNum = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
+                if (line.equals("NODES")) {
+                    leyendoNodos = true;
+                    leyendoEdges = false;
+                    continue;
+                }
+                if (line.equals("EDGES")) {
+                    leyendoNodos = false;
+                    leyendoEdges = true;
+                    continue;
+                }
+
+                if (leyendoNodos) {
+                    String[] parts = line.split(";");
+                    if (parts.length != 4) continue;
+
+                    String id = parts[0];
+                    int x = Integer.parseInt(parts[1]);
+                    int y = Integer.parseInt(parts[2]);
+                    Nodo.TipoNodo tipo = Nodo.TipoNodo.valueOf(parts[3]);
+
+                    Nodo n = new Nodo(x, y, id);
+                    n.setTipo(tipo);
+
+                    nodos.add(n);
+                    grafo.agregarNodo(n);
+                    porId.put(id, n);
+
+                    if (id.startsWith("N")) {
+                        try {
+                            int num = Integer.parseInt(id.substring(1));
+                            if (num > maxNum) maxNum = num;
+                        } catch (Exception ignored) {}
+                    }
+                }
+
+                if (leyendoEdges) {
+                    String[] parts = line.split("->");
+                    if (parts.length != 2) continue;
+
+                    Nodo origen = porId.get(parts[0]);
+                    Nodo destino = porId.get(parts[1]);
+                    if (origen != null && destino != null) {
+                        grafo.conectarDirigido(origen, destino);
+                    }
+                }
+            }
+        }
+
+        contadorNodos = maxNum + 1;
+        limpiarEstadosBusqueda();
     }
 }

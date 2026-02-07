@@ -14,6 +14,7 @@ public class MapPanel extends JPanel {
     private LaberintoController controller;
     private static final int NODE_RADIUS = 12;
     private static final int ARROW_GAP = 2;
+    private boolean mostrarConexiones = true;
 
     // Para conectar 
     private Nodo nodoSeleccionado = null;
@@ -62,23 +63,29 @@ public class MapPanel extends JPanel {
             return;
         }
 
-        // CONEXIONES (CLICK DERECHO)
+       // CONEXIONES 
         if (SwingUtilities.isRightMouseButton(e) &&
-                (controller.isModoConectarBi() || controller.isModoConectarDir())) {
+                (controller.isModoConectarBi() || controller.isModoConectarDir() || controller.isModoEliminarConexion())) {
+
             Nodo clickeado = controller.obtenerNodoCercano(x, y);
             if (clickeado == null) return;
+
             // Primer click derecho: selecciona origen
             if (nodoSeleccionado == null) {
                 nodoSeleccionado = clickeado;
                 repaint();
                 return;
             }
-            // Segundo click derecho: conecta según modo
-            if (controller.isModoConectarBi()) {
+
+            // Segundo click derecho: acción según modo
+            if (controller.isModoEliminarConexion()) {
+                controller.eliminarConexion(nodoSeleccionado, clickeado);
+            } else if (controller.isModoConectarBi()) {
                 controller.conectarBidireccional(nodoSeleccionado, clickeado);
             } else {
                 controller.conectarDireccional(nodoSeleccionado, clickeado);
             }
+
             nodoSeleccionado = null;
             repaint();
         }
@@ -136,23 +143,26 @@ public class MapPanel extends JPanel {
         Graphics2D g2 = (Graphics2D) g;
 
         // Dibujar conexiones y una flecha si es direccional
-        g2.setColor(Color.BLACK);
-        g2.setStroke(new BasicStroke(3));
-        Map<Nodo, List<Nodo>> conexiones = controller.getConexiones();
-        for (Nodo origen : conexiones.keySet()) {
-            for (Nodo destino : conexiones.get(origen)) {
-                int x1 = origen.getX();
-                int y1 = origen.getY();
-                int x2 = destino.getX();
-                int y2 = destino.getY();
+        if (mostrarConexiones) {
+            g2.setColor(Color.BLACK);
+            g2.setStroke(new BasicStroke(3));
+            Map<Nodo, List<Nodo>> conexiones = controller.getConexiones();
+            for (Nodo origen : conexiones.keySet()) {
+                for (Nodo destino : conexiones.get(origen)) {
+                    int x1 = origen.getX();
+                    int y1 = origen.getY();
+                    int x2 = destino.getX();
+                    int y2 = destino.getY();
 
-                boolean esBidireccional =
-                        conexiones.containsKey(destino) &&
-                        conexiones.get(destino).contains(origen);
-                if (esBidireccional) {
-                    g2.drawLine(x1, y1, x2, y2);
-                } else {
-                    drawArrow(g2, x1, y1, x2, y2);
+                    boolean esBidireccional =
+                            conexiones.containsKey(destino) &&
+                            conexiones.get(destino).contains(origen);
+
+                    if (esBidireccional) {
+                        g2.drawLine(x1, y1, x2, y2);
+                    } else {
+                        drawArrow(g2, x1, y1, x2, y2);
+                    }
                 }
             }
         }
@@ -201,5 +211,14 @@ public class MapPanel extends JPanel {
             }
         });
         timer.start();
+    }
+
+    public void toggleConexiones() {
+        mostrarConexiones = !mostrarConexiones;
+        repaint();
+    }
+
+    public boolean isMostrandoConexiones() {
+        return mostrarConexiones;
     }
 }
