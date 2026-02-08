@@ -145,6 +145,8 @@ public class MainWindow extends JFrame {
         centerButtons.add(btnNoVerConexiones);
         centerButtons.add(btnInfoBusqueda);
 
+        btnNoVerConexiones.addActionListener(e -> mapPanel.toggleConexiones());
+
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton infoButton = new JButton("Acerca de");
         infoButton.setFont(fontBoton);
