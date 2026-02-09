@@ -79,11 +79,10 @@ App.java
 
 ## Capturas de Pantalla de la Aplicación
 
-### Interfaz principal
-![Interfaz principal](src/assets/InterfazGrafica.png)
+### Interfaz principal y Nodos Conectados
+![Interfaz principal y nodos conectados](src/assets/InterfazGyNC.png)
 
-### Colocación y conexión de nodos
-![Nodos conectados](src/assets/NodosConectados.png)
+
 
 ### Ejecución de BFS
 ![BFS](src/assets/BFS.png)
